@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestDial(t *testing.T) {
+func TestEcho(t *testing.T) {
 	// 소켓 bind + listen
 	listener, err := net.Listen("tcp", "127.0.0.1:")
 	if err != nil {
@@ -46,6 +46,7 @@ func TestDial(t *testing.T) {
 					}
 
 					t.Logf("received: %q", buf[:n])
+					c.Write(buf[:n])
 				}
 			}(conn)
 		}
