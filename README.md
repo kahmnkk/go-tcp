@@ -1,4 +1,4 @@
-# go-practice
+# go-tcp
 
 ## 목표
 
