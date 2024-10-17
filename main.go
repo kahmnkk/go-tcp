@@ -1,10 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"io"
-	"main/internal/bs"
+	"main/internal/config"
+	"main/internal/logger"
 	"net"
+	"os"
+
+	"github.com/rs/zerolog/log"
 )
 
 func handler(c net.Conn) {
@@ -13,32 +16,38 @@ func handler(c net.Conn) {
 		n, err := c.Read(buf)
 		if err != nil {
 			if err == io.EOF {
-				fmt.Println("Connection closed by client: ", c.RemoteAddr().String())
+				log.Info().Msg("Connection closed by client: " + c.RemoteAddr().String())
 			}
-			fmt.Println("Failed to receive data: ", err)
+			log.Err(err).Msg("Failed to receive data")
 			break
 		}
 
 		if n > 0 {
-			fmt.Println(bs.BytesToString(buf[:n]))
+			log.Debug().Int("readSize", n).Bytes("bytes", buf[:n]).Msg("data")
 			c.Write(buf[:n])
 		}
 	}
 }
 
 func main() {
+	// Config
+	conf := config.Read()
+
+	// Logger
+	log.Logger = logger.NewLogger(conf.LogLevel, os.Stdout)
+
 	l, err := net.Listen("tcp", "127.0.0.1:8080")
 	if err != nil {
-		fmt.Println("Failed to Listen: ", err)
+		log.Err(err).Msg("Failed to Listen")
 	}
 	defer l.Close()
 
-	fmt.Println("server running...")
+	log.Info().Msg("Sever running...")
 
 	for {
 		conn, err := l.Accept()
 		if err != nil {
-			fmt.Println("Failed to Accept: ", err)
+			log.Err(err).Msg("Failed to Accept")
 			continue
 		}
 

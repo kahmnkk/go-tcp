@@ -2,14 +2,14 @@
 
 ## 목표
 
-- echo server
+- echo server ✅
 - Reactor + EventLoop 방식 소켓 프로그래밍
 - Single EventLoop
 - Multi EventLoop
     - Hash 방식
 - Ticker
-- logger
-- config (Viper)
+- logger ✅
+- config (Viper) ✅
 
 ## 그 후
 - Epoll 기반 통신 분석
