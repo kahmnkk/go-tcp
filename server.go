@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"main/internal/config"
 	"net"
 	"sync"
 
@@ -10,11 +12,13 @@ import (
 type Server struct {
 	listener net.Listener
 	wg       sync.WaitGroup
-	// config
+	conf     config.Config
 }
 
-func NewServer() *Server {
-	s := &Server{}
+func NewServer(conf config.Config) *Server {
+	s := &Server{
+		conf: conf,
+	}
 
 	return s
 }
@@ -24,14 +28,14 @@ func (s *Server) Init() {
 
 func (s *Server) Run() error {
 	var err error
-	s.listener, err = net.Listen("tcp", "127.0.0.1:8080")
+	s.listener, err = net.Listen("tcp", fmt.Sprintf("%s:%d", s.conf.Service.Ip, s.conf.Service.Port))
 	if err != nil {
 		log.Err(err).Msg("Failed to Listen")
 		return err
 	}
 	defer s.listener.Close()
 
-	log.Info().Msg("Sever running...")
+	log.Info().Msgf("Sever running... %s", s.listener.Addr())
 
 	for {
 		conn, err := s.listener.Accept()
@@ -41,7 +45,7 @@ func (s *Server) Run() error {
 		}
 
 		go func(c net.Conn) {
-			session := NewSession(c, 1024)
+			session := NewSession(c, s.conf.BufferSize)
 			defer func() {
 				session.Close()
 				s.wg.Done()
@@ -51,18 +55,23 @@ func (s *Server) Run() error {
 			log.Info().Msg("Session opened")
 			s.wg.Add(1)
 
-			// socket Read/Write
-			// TODO read / write
-
-			s.wg.Wait()
+			if err := session.Read(); err != nil {
+				log.Err(err).Msg("Read error")
+			}
 		}(conn)
 	}
 }
 
 // Stop server graceful shutdown
 func (s *Server) Stop() {
+	log.Info().Msg("Server stopping...")
+
 	err := s.listener.Close()
 	if err != nil {
 		log.Err(err).Msg("Failed to Close")
 	}
+
+	s.wg.Wait()
+
+	log.Info().Msg("Server gracefully shutdown")
 }

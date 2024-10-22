@@ -2,7 +2,6 @@ package main
 
 import (
 	"io"
-	"main/internal/bs"
 	"net"
 
 	"github.com/rs/zerolog/log"
@@ -21,30 +20,33 @@ func NewSession(conn net.Conn, bufSize int) *Session {
 	return s
 }
 
-func (s Session) Read() {
+func (s Session) Read() error {
 	for {
 		n, err := s.conn.Read(s.buf)
 		if err != nil {
 			if err == io.EOF {
 				log.Info().Msg("Connection closed by client: " + s.conn.RemoteAddr().String())
+				return nil
 			}
-			log.Err(err).Msg("Failed to receive data")
-			break
+			return err
 		}
 
 		if n > 0 {
-			log.Debug().Int("readSize", n).Bytes("bytes", s.buf[:n]).Msg("data")
-			// TODO handle packet
+			log.Debug().Int("readSize", n).Bytes("bytes", s.buf[:n]).Msg("Read")
+
+			// echo
+			s.Write(s.buf[:n])
 		}
 	}
 }
 
-func (s Session) Write(message string) {
-	_, err := s.conn.Write(bs.StringToBytes(message))
+func (s Session) Write(message []byte) {
+	log.Debug().Bytes("bytes", message).Msg("Write")
+
+	_, err := s.conn.Write(message)
 	if err != nil {
 		log.Err(err).Msg("Failed to write data")
 	}
-	log.Debug().Msg("[Write] " + message)
 }
 
 func (s Session) Close() {

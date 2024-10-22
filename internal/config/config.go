@@ -8,7 +8,14 @@ import (
 )
 
 type Config struct {
-	LogLevel string `yaml:"logLevel"`
+	LogLevel   string  `yaml:"logLevel"`
+	Service    Service `yaml:"service"`
+	BufferSize int     `yaml:"bufferSize"`
+}
+
+type Service struct {
+	Ip   string `yaml:"ip"`
+	Port int    `yaml:"port"`
 }
 
 func Read() Config {
