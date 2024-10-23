@@ -13,6 +13,7 @@ type Server struct {
 	listener net.Listener
 	wg       sync.WaitGroup
 	conf     config.Config
+	router   *EventRouter
 }
 
 func NewServer(conf config.Config) *Server {
@@ -24,6 +25,11 @@ func NewServer(conf config.Config) *Server {
 }
 
 func (s *Server) Init() {
+	router := NewEventRouter()
+	router.RegisterHandler("ECHO", &EchoHandler{})
+	router.RegisterHandler("PING", &PingHandler{})
+
+	s.router = router
 }
 
 func (s *Server) Run() error {
@@ -52,11 +58,16 @@ func (s *Server) Run() error {
 			}()
 
 			// socket Open
-			log.Info().Msg("Session opened")
+			session.Open()
 			s.wg.Add(1)
 
-			if err := session.Read(); err != nil {
-				log.Err(err).Msg("Read error")
+			for {
+				msg, err := session.Read()
+				if err != nil {
+					log.Err(err).Msg("Read error")
+				}
+
+				s.router.RouteMessage(session, msg)
 			}
 		}(conn)
 	}
