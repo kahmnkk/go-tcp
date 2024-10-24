@@ -1,20 +1,22 @@
 package main
 
 import (
-	"io"
 	"main/internal/bs"
 	"net"
 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
 type Session struct {
+	id   string
 	conn net.Conn
 	buf  []byte
 }
 
 func NewSession(conn net.Conn, bufSize int) *Session {
 	s := &Session{
+		id:   uuid.New().String(),
 		conn: conn,
 		buf:  make([]byte, bufSize),
 	}
@@ -32,10 +34,6 @@ func (s *Session) Close() {
 func (s *Session) Read() (string, error) {
 	n, err := s.conn.Read(s.buf)
 	if err != nil {
-		if err == io.EOF {
-			log.Info().Msg("Connection closed by client: " + s.conn.RemoteAddr().String())
-			return "", nil
-		}
 		return "", err
 	}
 

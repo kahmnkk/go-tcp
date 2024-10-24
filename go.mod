@@ -4,6 +4,7 @@ go 1.22.1
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0
+	github.com/google/uuid v1.4.0
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/viper v1.19.0
 )

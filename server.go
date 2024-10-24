@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"main/internal/config"
+	"main/internal/ds"
 	"net"
 	"sync"
 
@@ -10,15 +12,17 @@ import (
 )
 
 type Server struct {
-	listener net.Listener
-	wg       sync.WaitGroup
-	conf     config.Config
-	router   *EventRouter
+	listener   net.Listener
+	wg         sync.WaitGroup
+	conf       config.Config
+	router     *EventRouter
+	sessionMap *ds.ConcurrentMap[string, *Session]
 }
 
 func NewServer(conf config.Config) *Server {
 	s := &Server{
-		conf: conf,
+		conf:       conf,
+		sessionMap: ds.NewConcurrentMap[string, *Session](),
 	}
 
 	return s
@@ -52,19 +56,19 @@ func (s *Server) Run() error {
 
 		go func(c net.Conn) {
 			session := NewSession(c, s.conf.BufferSize)
-			defer func() {
-				session.Close()
-				s.wg.Done()
-			}()
+			defer s.onDisconnect(session)
 
 			// socket Open
-			session.Open()
-			s.wg.Add(1)
+			s.onConnnect(session)
 
 			for {
 				msg, err := session.Read()
 				if err != nil {
-					log.Err(err).Msg("Read error")
+					if err == io.EOF {
+						log.Info().Msg("Connection closed by client: " + c.RemoteAddr().String())
+						return
+					}
+					return
 				}
 
 				s.router.RouteMessage(session, msg)
@@ -85,4 +89,18 @@ func (s *Server) Stop() {
 	s.wg.Wait()
 
 	log.Info().Msg("Server gracefully shutdown")
+}
+
+// onConnnect new client connection
+func (s *Server) onConnnect(session *Session) {
+	s.wg.Add(1)
+	s.sessionMap.Set(session.id, session)
+	session.Open()
+}
+
+// onDisconnect client disconnected
+func (s *Server) onDisconnect(session *Session) {
+	session.Close()
+	s.sessionMap.Del(session.id)
+	s.wg.Done()
 }
