@@ -15,7 +15,7 @@ func NewConcurrentMap[K comparable, V any]() *ConcurrentMap[K, V] {
 
 func (cm *ConcurrentMap[K, V]) Get(key K) (V, bool) {
 	cm.mu.RLock()
-	defer cm.mu.Unlock()
+	defer cm.mu.RUnlock()
 
 	v, ok := cm.m[key]
 	return v, ok
@@ -37,7 +37,16 @@ func (cm *ConcurrentMap[K, V]) Del(key K) {
 
 func (cm *ConcurrentMap[K, V]) Len() int {
 	cm.mu.RLock()
-	defer cm.mu.Unlock()
+	defer cm.mu.RUnlock()
 
 	return len(cm.m)
+}
+
+func (cm *ConcurrentMap[K, V]) Range(f func(k K, v V)) {
+	cm.mu.RLock()
+	defer cm.mu.RUnlock()
+
+	for k, v := range cm.m {
+		f(k, v)
+	}
 }
