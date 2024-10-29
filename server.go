@@ -11,12 +11,15 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+var server *Server
+
 type Server struct {
-	listener   net.Listener
-	wg         sync.WaitGroup
-	conf       config.Config
-	router     *EventRouter
-	sessionMap *ds.ConcurrentMap[string, *Session]
+	listener    net.Listener
+	wg          sync.WaitGroup
+	conf        config.Config
+	router      *EventRouter
+	sessionMap  *ds.ConcurrentMap[string, *Session]
+	eventRunner *EventRunner
 }
 
 func NewServer(conf config.Config) *Server {
@@ -34,6 +37,7 @@ func (s *Server) Init() {
 	router.RegisterHandler("PING", &PingHandler{})
 
 	s.router = router
+	s.eventRunner = NewEventRunner(1024)
 }
 
 func (s *Server) Run() error {
@@ -46,6 +50,8 @@ func (s *Server) Run() error {
 	defer s.listener.Close()
 
 	log.Info().Msgf("Sever running... %s", s.listener.Addr())
+
+	go s.eventRunner.Run()
 
 	for {
 		conn, err := s.listener.Accept()
@@ -71,7 +77,7 @@ func (s *Server) Run() error {
 					return
 				}
 
-				s.router.RouteMessage(session, msg)
+				s.onRead(session, msg)
 			}
 		}(conn)
 	}
@@ -94,13 +100,20 @@ func (s *Server) Stop() {
 // onConnnect new client connection
 func (s *Server) onConnnect(session *Session) {
 	s.wg.Add(1)
-	s.sessionMap.Set(session.id, session)
 	session.Open()
+	s.eventRunner.Send(&EventOpen{session})
 }
 
 // onDisconnect client disconnected
 func (s *Server) onDisconnect(session *Session) {
 	session.Close()
-	s.sessionMap.Del(session.id)
 	s.wg.Done()
+	s.eventRunner.Send(&EventClose{session})
+}
+
+func (s *Server) onRead(session *Session, msg string) {
+	s.eventRunner.Send(&EventPacket{
+		session,
+		msg,
+	})
 }

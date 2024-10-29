@@ -15,12 +15,12 @@ func main() {
 	// Logger
 	log.Logger = logger.NewLogger(conf.LogLevel, os.Stdout)
 
-	s := NewServer(conf)
-	defer s.Stop()
+	server = NewServer(conf)
+	defer server.Stop()
 
-	s.Init()
+	server.Init()
 
-	if err := s.Run(); err != nil {
+	if err := server.Run(); err != nil {
 		log.Err(err).Msg("Server failed to run")
 	}
 }
