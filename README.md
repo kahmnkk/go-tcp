@@ -4,7 +4,7 @@ Go TCP server example
 ## 목표
 
 - echo server ✅
-- Reactor + EventLoop 방식 소켓 프로그래밍
+- Reactor + EventLoop 방식 소켓 프로그래밍 ✅
 - Single EventLoop
 - Multi EventLoop
     - Hash 방식
