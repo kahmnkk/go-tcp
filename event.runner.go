@@ -1,7 +1,7 @@
 package main
 
 import (
-	"main/internal/ds"
+	"gotcp/internal/ds"
 )
 
 type EventRunner struct {

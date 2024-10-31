@@ -1,7 +1,7 @@
 package main
 
 import (
-	"main/internal/bs"
+	"gotcp/internal/bs"
 	"net"
 
 	"github.com/google/uuid"

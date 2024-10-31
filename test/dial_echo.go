@@ -1,8 +1,8 @@
 package test
 
 import (
+	"gotcp/internal/bs"
 	"io"
-	"main/internal/bs"
 	"net"
 	"testing"
 )

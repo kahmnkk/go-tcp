@@ -9,7 +9,7 @@ type EventOpen struct {
 }
 
 func (e *EventOpen) Handle() {
-	// s.sessionMap.Set(e.session.id, e.session)
+	server.sessionMap.Set(e.session.id, e.session)
 }
 
 type EventClose struct {
@@ -17,7 +17,7 @@ type EventClose struct {
 }
 
 func (e *EventClose) Handle() {
-	// s.sessionMap.Del(e.session.id)
+	server.sessionMap.Del(e.session.id)
 }
 
 type EventPacket struct {

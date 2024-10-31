@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"gotcp/internal/config"
+	"gotcp/internal/ds"
 	"io"
-	"main/internal/config"
-	"main/internal/ds"
 	"net"
 	"sync"
 

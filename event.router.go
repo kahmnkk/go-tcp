@@ -1,7 +1,7 @@
 package main
 
 import (
-	"main/internal/bs"
+	"gotcp/internal/bs"
 	"strings"
 
 	"github.com/rs/zerolog/log"

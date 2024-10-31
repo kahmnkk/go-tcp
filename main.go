@@ -1,8 +1,8 @@
 package main
 
 import (
-	"main/internal/config"
-	"main/internal/logger"
+	"gotcp/internal/config"
+	"gotcp/internal/logger"
 	"os"
 
 	"github.com/rs/zerolog/log"
